@@ -8,16 +8,21 @@ import 'package:dube/screens/dashboard_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+    try {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    } catch (e) {
+      debugPrint('Desktop SQLite init warning: $e');
+    }
   }
 
   if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
     try {
       await MobileAds.instance.initialize();
-    } catch (_) {
-      // Gracefully continue with local sponsor fallback if AdMob initialization fails
+    } catch (e) {
+      debugPrint('AdMob init warning: $e');
     }
   }
 
