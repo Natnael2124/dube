@@ -78,9 +78,11 @@ class DebtHistoryEntry {
     required this.history,
     required this.itemsDescription,
     required this.debtId,
+    this.currency = 'ETB',
   });
 
   final DebtHistory history;
   final String itemsDescription;
   final int debtId;
+  final String currency;
 }

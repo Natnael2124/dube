@@ -13,6 +13,7 @@ class DebtRecord {
     required this.itemsDescription,
     required this.totalAmount,
     this.amountPaid = 0.0,
+    this.currency = 'ETB',
     required this.dueDate,
     required this.createdAt,
     required this.status,
@@ -23,6 +24,7 @@ class DebtRecord {
   final String itemsDescription;
   final double totalAmount;
   final double amountPaid;
+  final String currency;
   final String dueDate;
   final String createdAt;
   final String status;
@@ -54,6 +56,7 @@ class DebtRecord {
     String? itemsDescription,
     double? totalAmount,
     double? amountPaid,
+    String? currency,
     String? dueDate,
     String? createdAt,
     String? status,
@@ -64,6 +67,7 @@ class DebtRecord {
       itemsDescription: itemsDescription ?? this.itemsDescription,
       totalAmount: totalAmount ?? this.totalAmount,
       amountPaid: amountPaid ?? this.amountPaid,
+      currency: currency ?? this.currency,
       dueDate: dueDate ?? this.dueDate,
       createdAt: createdAt ?? this.createdAt,
       status: status ?? this.status,
@@ -77,6 +81,7 @@ class DebtRecord {
       'items_description': itemsDescription,
       'total_amount': totalAmount,
       'amount_paid': amountPaid,
+      'currency': currency,
       'due_date': dueDate,
       'created_at': createdAt,
       'status': status,
@@ -90,6 +95,9 @@ class DebtRecord {
       itemsDescription: map['items_description'] as String,
       totalAmount: (map['total_amount'] as num).toDouble(),
       amountPaid: (map['amount_paid'] as num?)?.toDouble() ?? 0.0,
+      currency: (map['currency'] as String?)?.trim().isNotEmpty == true
+          ? (map['currency'] as String).trim()
+          : 'ETB',
       dueDate: map['due_date'] as String,
       createdAt: map['created_at'] as String,
       status: map['status'] as String,

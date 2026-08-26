@@ -104,6 +104,7 @@ void main() {
       expect(fromMap.itemsDescription, 'Soap, Salt');
       expect(fromMap.totalAmount, 350.50);
       expect(fromMap.amountPaid, 150.00);
+      expect(fromMap.currency, 'ETB');
       expect(fromMap.status, DebtStatus.active);
     });
   });

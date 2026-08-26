@@ -9,7 +9,6 @@ import 'package:dube/screens/customer_detail_screen.dart';
 import 'package:dube/screens/shop_notes_screen.dart';
 import 'package:dube/utils/formatters.dart';
 import 'package:dube/widgets/ad_banner_bar.dart';
-import 'package:dube/widgets/currency_picker.dart';
 import 'package:dube/widgets/language_picker.dart';
 
 enum _DebtFilter { all, active, overdue, settled }
@@ -137,11 +136,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     );
                   },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.payments_outlined),
-                  tooltip: l10n.currency,
-                  onPressed: () => showCurrencyPickerDialog(context),
                 ),
                 IconButton(
                   icon: const Icon(Icons.language),
@@ -465,7 +459,10 @@ class _DebtorCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        formatEtb(entry.debt.remainingBalance),
+                        formatEtb(
+                          entry.debt.remainingBalance,
+                          entry.debt.currency,
+                        ),
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: overdue
@@ -477,7 +474,7 @@ class _DebtorCard extends StatelessWidget {
                       ),
                       if (settled)
                         Text(
-                          '${l10n.totalPrefix} ${formatEtbCompact(entry.debt.totalAmount)}',
+                          '${l10n.totalPrefix} ${formatEtb(entry.debt.totalAmount, entry.debt.currency)}',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: scheme.onSurfaceVariant,
                             fontSize: 11,

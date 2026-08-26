@@ -22,10 +22,156 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
   final _amountController = TextEditingController();
   final _notesController = TextEditingController();
 
+  String _currency = 'ETB';
   DateTime _dueDate = DateTime.now().add(const Duration(days: 7));
   Customer? _existingCustomer;
   CustomerReliabilityStats? _reliabilityStats;
   bool _saving = false;
+
+  static const List<Map<String, String>> _currencyPresets = [
+    {'code': 'ETB', 'label': 'ETB', 'desc': 'Ethiopian Birr (Default / ቀዳሚ)'},
+    {'code': 'USD', 'label': r'USD ($)', 'desc': 'US Dollar'},
+    {'code': 'EUR', 'label': 'EUR (€)', 'desc': 'Euro'},
+    {'code': 'GBP', 'label': 'GBP (£)', 'desc': 'British Pound'},
+    {'code': 'KES', 'label': 'KES (KSh)', 'desc': 'Kenyan Shilling'},
+    {'code': 'AED', 'label': 'AED (د.إ)', 'desc': 'UAE Dirham'},
+    {'code': 'SAR', 'label': 'SAR (﷼)', 'desc': 'Saudi Riyal'},
+    {'code': 'ብር', 'label': 'ብር', 'desc': 'የኢትዮጵያ ብር'},
+    {'code': 'Qarshii', 'label': 'Qarshii', 'desc': 'Qarshii Itoophiyaa'},
+  ];
+
+  Future<void> _pickCurrency() async {
+    final l10n = AppLocalizations.of(context);
+    final customController = TextEditingController();
+
+    final chosen = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final theme = Theme.of(context);
+            final scheme = theme.colorScheme;
+
+            return Container(
+              decoration: BoxDecoration(
+                color: scheme.surface,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          l10n.selectCurrency,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.of(sheetCtx).pop(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ..._currencyPresets.map((preset) {
+                      final code = preset['code']!;
+                      final isSelected = _currency == code;
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: isSelected
+                              ? scheme.primary
+                              : scheme.surfaceContainerHighest,
+                          foregroundColor: isSelected
+                              ? scheme.onPrimary
+                              : scheme.onSurfaceVariant,
+                          child: Text(
+                            code.length > 3 ? code.substring(0, 3) : code,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        title: Text(
+                          preset['label']!,
+                          style: TextStyle(
+                            fontWeight:
+                                isSelected ? FontWeight.w800 : FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: Text(preset['desc']!),
+                        trailing: isSelected
+                            ? Icon(Icons.check_circle, color: scheme.primary)
+                            : null,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        selected: isSelected,
+                        onTap: () => Navigator.of(sheetCtx).pop(code),
+                      );
+                    }),
+                    const Divider(height: 24),
+                    Text(
+                      l10n.customCurrency,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: customController,
+                            textCapitalization: TextCapitalization.characters,
+                            decoration: InputDecoration(
+                              hintText: 'e.g. CAD, AUD, FCFA',
+                              isDense: true,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton(
+                          onPressed: () {
+                            final val = customController.text.trim();
+                            if (val.isNotEmpty) {
+                              Navigator.of(sheetCtx).pop(val);
+                            }
+                          },
+                          child: Text(l10n.save),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (chosen != null && chosen.trim().isNotEmpty) {
+      setState(() => _currency = chosen.trim());
+    }
+  }
 
   @override
   void dispose() {
@@ -96,6 +242,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
         itemsDescription: _itemsController.text.trim(),
         totalAmount: amount,
         dueDate: _dueDate,
+        currency: _currency,
         notes: _notesController.text.trim().isEmpty
             ? null
             : _notesController.text.trim(),
@@ -269,6 +416,25 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                 },
               ),
               const SizedBox(height: 12),
+              ListTile(
+                onTap: _pickCurrency,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: scheme.outlineVariant),
+                ),
+                leading: Icon(Icons.currency_exchange, color: scheme.primary),
+                title: Text(l10n.currency),
+                subtitle: Text(
+                  _currency == 'ETB' ? '$_currency (Default / ቀዳሚ)' : _currency,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: scheme.primary,
+                  ),
+                ),
+                trailing: const Icon(Icons.arrow_drop_down),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _amountController,
                 keyboardType: const TextInputType.numberWithOptions(
@@ -279,9 +445,22 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                 ],
                 decoration: InputDecoration(
-                  labelText: l10n.amountEtb,
+                  labelText: '${l10n.totalDue} ($_currency)',
                   hintText: l10n.amountHint,
-                  prefixIcon: const Icon(Icons.payments_outlined),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: Center(
+                      widthFactor: 1,
+                      child: Text(
+                        _currency,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                          color: scheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
                 validator: (value) {
                   final parsed = double.tryParse((value ?? '').trim());

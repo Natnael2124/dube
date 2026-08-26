@@ -15,7 +15,7 @@ class DbHelper {
   static final DbHelper instance = DbHelper._();
 
   static const _dbName = 'dube.db';
-  static const _dbVersion = 2;
+  static const _dbVersion = 3;
 
   static const tableCustomers = 'Customers';
   static const tableDebts = 'DebtRecords';
@@ -62,6 +62,7 @@ class DbHelper {
         items_description TEXT NOT NULL,
         total_amount REAL NOT NULL,
         amount_paid REAL DEFAULT 0.0,
+        currency TEXT NOT NULL DEFAULT 'ETB',
         due_date TEXT NOT NULL,
         created_at TEXT NOT NULL,
         status TEXT NOT NULL,
@@ -103,6 +104,13 @@ class DbHelper {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _createNotesTable(db);
+    }
+    if (oldVersion < 3) {
+      try {
+        await db.execute(
+          'ALTER TABLE $tableDebts ADD COLUMN currency TEXT NOT NULL DEFAULT "ETB"',
+        );
+      } catch (_) {}
     }
   }
 
@@ -225,7 +233,7 @@ class DbHelper {
     final db = await database;
     final rows = await db.rawQuery(
       '''
-      SELECT h.*, d.items_description
+      SELECT h.*, d.items_description, d.currency
       FROM $tableHistory h
       INNER JOIN $tableDebts d ON d.id = h.debt_id
       WHERE d.customer_id = ?
@@ -238,6 +246,9 @@ class DbHelper {
         history: DebtHistory.fromMap(row),
         itemsDescription: row['items_description'] as String,
         debtId: row['debt_id'] as int,
+        currency: (row['currency'] as String?)?.trim().isNotEmpty == true
+            ? (row['currency'] as String).trim()
+            : 'ETB',
       );
     }).toList();
   }
@@ -307,6 +318,7 @@ class DbHelper {
         d.items_description AS d_items_description,
         d.total_amount AS d_total_amount,
         d.amount_paid AS d_amount_paid,
+        d.currency AS d_currency,
         d.due_date AS d_due_date,
         d.created_at AS d_created_at,
         d.status AS d_status,
@@ -344,6 +356,9 @@ class DbHelper {
           itemsDescription: row['d_items_description'] as String,
           totalAmount: (row['d_total_amount'] as num).toDouble(),
           amountPaid: (row['d_amount_paid'] as num?)?.toDouble() ?? 0,
+          currency: (row['d_currency'] as String?)?.trim().isNotEmpty == true
+              ? (row['d_currency'] as String).trim()
+              : 'ETB',
           dueDate: row['d_due_date'] as String,
           createdAt: row['d_created_at'] as String,
           status: row['d_status'] as String,
@@ -469,6 +484,7 @@ class DbHelper {
     required String itemsDescription,
     required double totalAmount,
     required DateTime dueDate,
+    String currency = 'ETB',
     String? notes,
   }) async {
     final db = await database;
@@ -504,12 +520,14 @@ class DbHelper {
       final dueIso = dueDate.toIso8601String();
       final status =
           isPastDueDate(dueDate) ? DebtStatus.overdue : DebtStatus.active;
+      final cleanCurrency = currency.trim().isEmpty ? 'ETB' : currency.trim();
 
       final debtId = await txn.insert(tableDebts, {
         'customer_id': customerId,
         'items_description': itemsDescription.trim(),
         'total_amount': totalAmount,
         'amount_paid': 0.0,
+        'currency': cleanCurrency,
         'due_date': dueIso,
         'created_at': now,
         'status': status,
@@ -557,7 +575,7 @@ class DbHelper {
       final remaining = debt.remainingBalance;
       if (amount - remaining > 0.005) {
         throw ArgumentError(
-          'Payment cannot exceed the remaining balance of ${formatEtb(remaining)}.',
+          'Payment cannot exceed the remaining balance of ${formatEtb(remaining, debt.currency)}.',
         );
       }
 
@@ -684,7 +702,7 @@ class DbHelper {
         'action_type': HistoryAction.settled,
         'note': note?.trim().isNotEmpty == true
             ? note!.trim()
-            : 'Settled in full (${formatEtb(remaining)})',
+            : 'Settled in full (${formatEtb(remaining, debt.currency)})',
         'amount_change': remaining,
         'created_at': now,
       });
@@ -697,6 +715,7 @@ class DbHelper {
     required int debtId,
     required String itemsDescription,
     required double totalAmount,
+    String? currency,
     DateTime? dueDate,
     String? note,
   }) async {
@@ -713,9 +732,10 @@ class DbHelper {
       }
 
       final debt = DebtRecord.fromMap(rows.first);
+      final debtCurr = debt.currency;
       if (totalAmount < debt.amountPaid - 0.005) {
         throw ArgumentError(
-          'Total amount cannot be less than the already paid amount of ${formatEtb(debt.amountPaid)}.',
+          'Total amount cannot be less than the already paid amount of ${formatEtb(debt.amountPaid, debtCurr)}.',
         );
       }
 
@@ -727,6 +747,10 @@ class DbHelper {
           ? DebtStatus.settled
           : (isPastDueDate(newDue) ? DebtStatus.overdue : DebtStatus.active);
 
+      final newCurrency = currency?.trim().isNotEmpty == true
+          ? currency!.trim()
+          : debt.currency;
+
       final amountDiff = totalAmount - debt.totalAmount;
       final now = DateTime.now().toIso8601String();
 
@@ -735,6 +759,7 @@ class DbHelper {
         {
           'items_description': itemsDescription.trim(),
           'total_amount': totalAmount,
+          'currency': newCurrency,
           'due_date': dueIso,
           'status': nextStatus,
         },
@@ -743,7 +768,7 @@ class DbHelper {
       );
 
       final defaultNote = amountDiff != 0
-          ? 'Total adjusted from ${formatEtb(debt.totalAmount)} to ${formatEtb(totalAmount)}'
+          ? 'Total adjusted from ${formatEtb(debt.totalAmount, debtCurr)} to ${formatEtb(totalAmount, newCurrency)}'
           : 'Dube details updated';
 
       await txn.insert(tableHistory, {
@@ -758,6 +783,7 @@ class DbHelper {
       return debt.copyWith(
         itemsDescription: itemsDescription.trim(),
         totalAmount: totalAmount,
+        currency: newCurrency,
         dueDate: dueIso,
         status: nextStatus,
       );

@@ -133,10 +133,10 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                     subtitle: Text(
                       debt.isSettled
                           ? AppLocalizations.of(context).settledAmount(
-                              formatEtb(debt.totalAmount),
+                              formatEtb(debt.totalAmount, debt.currency),
                             )
                           : AppLocalizations.of(context).remainingDue(
-                              formatEtb(debt.remainingBalance),
+                              formatEtb(debt.remainingBalance, debt.currency),
                               formatDateIso(debt.dueDate),
                             ),
                     ),
@@ -287,11 +287,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                       Text(
                         debt.isSettled
                             ? AppLocalizations.of(context).settledAmount(
-                                formatEtb(debt.totalAmount),
+                                formatEtb(debt.totalAmount, debt.currency),
                               )
                             : AppLocalizations.of(context).remainingOf(
-                                formatEtb(debt.remainingBalance),
-                                formatEtb(debt.totalAmount),
+                                formatEtb(debt.remainingBalance, debt.currency),
+                                formatEtb(debt.totalAmount, debt.currency),
                               ),
                         style: TextStyle(
                           color: debt.isSettled
@@ -773,7 +773,7 @@ class _RecordPaymentDialogState extends State<_RecordPaymentDialog> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Remaining Balance: ${formatEtb(remaining)}',
+                      'Remaining Balance: ${formatEtb(remaining, widget.debt.currency)}',
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: scheme.primary,
                         fontWeight: FontWeight.w700,
@@ -824,7 +824,7 @@ class _RecordPaymentDialogState extends State<_RecordPaymentDialog> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Marks this Dube as settled in full with remaining balance ${formatEtb(0)}.',
+                          'Marks this Dube as settled in full with remaining balance ${formatEtb(0, widget.debt.currency)}.',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: const Color(0xFF1B5E20),
                           ),
@@ -844,7 +844,7 @@ class _RecordPaymentDialogState extends State<_RecordPaymentDialog> {
                     FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                   ],
                   decoration: InputDecoration(
-                    labelText: l10n.paymentAmount,
+                    labelText: '${l10n.paymentAmount} (${widget.debt.currency})',
                     hintText: '0.00',
                     prefixIcon: const Icon(Icons.payments_outlined),
                   ),
@@ -854,7 +854,7 @@ class _RecordPaymentDialogState extends State<_RecordPaymentDialog> {
                       return 'Enter a valid payment amount';
                     }
                     if (parsed - remaining > 0.005) {
-                      return 'Cannot exceed remaining balance (${formatEtb(remaining)})';
+                      return 'Cannot exceed remaining balance (${formatEtb(remaining, widget.debt.currency)})';
                     }
                     return null;
                   },
@@ -1000,7 +1000,7 @@ class _EditDebtDialogState extends State<_EditDebtDialog> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    'Already paid: ${formatEtb(widget.debt.amountPaid)}',
+                    'Already paid: ${formatEtb(widget.debt.amountPaid, widget.debt.currency)}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -1034,7 +1034,7 @@ class _EditDebtDialogState extends State<_EditDebtDialog> {
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                 ],
                 decoration: InputDecoration(
-                  labelText: l10n.amountEtb,
+                  labelText: '${l10n.totalDue} (${widget.debt.currency})',
                   prefixIcon: const Icon(Icons.payments_outlined),
                 ),
                 validator: (value) {
@@ -1043,7 +1043,7 @@ class _EditDebtDialogState extends State<_EditDebtDialog> {
                     return 'Enter a valid total amount';
                   }
                   if (parsed < widget.debt.amountPaid - 0.005) {
-                    return 'Total cannot be less than already paid (${formatEtb(widget.debt.amountPaid)})';
+                    return 'Total cannot be less than already paid (${formatEtb(widget.debt.amountPaid, widget.debt.currency)})';
                   }
                   return null;
                 },
@@ -1315,8 +1315,8 @@ class _DebtTile extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       settled
-                          ? 'Settled · ${formatEtb(debt.totalAmount)}'
-                          : '${formatEtb(debt.remainingBalance)} remaining of ${formatEtb(debt.totalAmount)}',
+                          ? 'Settled · ${formatEtb(debt.totalAmount, debt.currency)}'
+                          : '${formatEtb(debt.remainingBalance, debt.currency)} remaining of ${formatEtb(debt.totalAmount, debt.currency)}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: settled
                                 ? const Color(0xFF2E7D32)
@@ -1505,10 +1505,10 @@ class _TimelineTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       history.actionType == HistoryAction.created
-                          ? 'Amount: ${formatEtb(history.amountChange!)}'
+                          ? 'Amount: ${formatEtb(history.amountChange!, entry.currency)}'
                           : history.actionType == HistoryAction.adjusted
-                              ? 'Adjusted difference: ${formatEtb(history.amountChange!)}'
-                              : 'Paid: ${formatEtb(history.amountChange!)}',
+                              ? 'Adjusted difference: ${formatEtb(history.amountChange!, entry.currency)}'
+                              : 'Paid: ${formatEtb(history.amountChange!, entry.currency)}',
                       style: theme.textTheme.bodyMedium,
                     ),
                   ],

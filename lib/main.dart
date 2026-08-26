@@ -5,7 +5,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:dube/l10n/app_localizations.dart';
-import 'package:dube/l10n/currency_controller.dart';
 import 'package:dube/l10n/fallback_localizations.dart';
 import 'package:dube/l10n/locale_controller.dart';
 import 'package:dube/screens/dashboard_screen.dart';
@@ -23,7 +22,6 @@ void main() async {
   }
 
   await LocaleController.instance.load();
-  await CurrencyController.instance.load();
   runApp(const DubeApp());
 }
 
@@ -55,23 +53,18 @@ class DubeApp extends StatelessWidget {
     return ValueListenableBuilder<Locale?>(
       valueListenable: LocaleController.instance.notifier,
       builder: (context, locale, _) {
-        return ValueListenableBuilder<String>(
-          valueListenable: CurrencyController.instance.notifier,
-          builder: (context, currencySymbol, _) {
-            return MaterialApp(
-              title: 'ድቤ · Dube',
-              debugShowCheckedModeBanner: false,
-              themeMode: ThemeMode.system,
-              theme: _buildTheme(lightScheme),
-              darkTheme: _buildTheme(darkScheme),
-              locale: locale ?? const Locale('en', ''),
-              supportedLocales: AppLocalizations.supportedLocales,
-              localizationsDelegates: localizationsDelegates,
-              home: locale == null
-                  ? const LanguageSelectionScreen()
-                  : const DashboardScreen(),
-            );
-          },
+        return MaterialApp(
+          title: 'ድቤ · Dube',
+          debugShowCheckedModeBanner: false,
+          themeMode: ThemeMode.system,
+          theme: _buildTheme(lightScheme),
+          darkTheme: _buildTheme(darkScheme),
+          locale: locale ?? const Locale('en', ''),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: localizationsDelegates,
+          home: locale == null
+              ? const LanguageSelectionScreen()
+              : const DashboardScreen(),
         );
       },
     );
