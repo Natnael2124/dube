@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:dube/l10n/app_localizations.dart';
 
 class LocalSponsor {
   const LocalSponsor({
@@ -322,7 +323,7 @@ class _LocalSponsorCard extends StatelessWidget {
                   Icon(Icons.phone, size: 12, color: scheme.onPrimary),
                   const SizedBox(width: 4),
                   Text(
-                    'Call · ደውል',
+                    context.l10n.call,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: scheme.onPrimary,
                       fontWeight: FontWeight.w700,

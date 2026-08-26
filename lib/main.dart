@@ -1,22 +1,17 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'package:dube/l10n/app_localizations.dart';
+import 'package:dube/l10n/fallback_localizations.dart';
+import 'package:dube/l10n/locale_controller.dart';
 import 'package:dube/screens/dashboard_screen.dart';
+import 'package:dube/screens/language_selection_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-    try {
-      sqfliteFfiInit();
-      databaseFactory = databaseFactoryFfi;
-    } catch (e) {
-      debugPrint('Desktop SQLite init warning: $e');
-    }
-  }
 
   if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
     try {
@@ -26,6 +21,7 @@ void main() async {
     }
   }
 
+  await LocaleController.instance.load();
   runApp(const DubeApp());
 }
 
@@ -33,6 +29,15 @@ class DubeApp extends StatelessWidget {
   const DubeApp({super.key});
 
   static const Color _seed = Color(0xFF0B6E4F);
+
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = [
+    AppLocalizations.delegate,
+    FallbackMaterialLocalizationsDelegate(),
+    FallbackCupertinoLocalizationsDelegate(),
+    GlobalMaterialLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -45,13 +50,23 @@ class DubeApp extends StatelessWidget {
       brightness: Brightness.dark,
     );
 
-    return MaterialApp(
-      title: 'ድቤ · Dube',
-      debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.system,
-      theme: _buildTheme(lightScheme),
-      darkTheme: _buildTheme(darkScheme),
-      home: const DashboardScreen(),
+    return ValueListenableBuilder<Locale?>(
+      valueListenable: LocaleController.instance.notifier,
+      builder: (context, locale, _) {
+        return MaterialApp(
+          title: 'ድቤ · Dube',
+          debugShowCheckedModeBanner: false,
+          themeMode: ThemeMode.system,
+          theme: _buildTheme(lightScheme),
+          darkTheme: _buildTheme(darkScheme),
+          locale: locale ?? const Locale('en', ''),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: localizationsDelegates,
+          home: locale == null
+              ? const LanguageSelectionScreen()
+              : const DashboardScreen(),
+        );
+      },
     );
   }
 

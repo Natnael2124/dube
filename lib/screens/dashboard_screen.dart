@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 import 'package:dube/database/db_helper.dart';
+import 'package:dube/l10n/app_localizations.dart';
 import 'package:dube/models/debt_record.dart';
 import 'package:dube/models/debtor_entry.dart';
 import 'package:dube/screens/add_debt_screen.dart';
 import 'package:dube/screens/customer_detail_screen.dart';
 import 'package:dube/utils/formatters.dart';
 import 'package:dube/widgets/ad_banner_bar.dart';
+import 'package:dube/widgets/language_picker.dart';
 
 enum _DebtFilter { all, active, overdue, settled }
 
@@ -99,6 +101,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: _load,
@@ -106,17 +110,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverAppBar.large(
-              title: const Column(
+              title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('ድቤ  ·  Dube'),
-                  SizedBox(height: 2),
+                  const Text('ድቤ  ·  Dube'),
+                  const SizedBox(height: 2),
                   Text(
-                    'Shop credit ledger',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
+                    l10n.dashboard,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                 ],
               ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.language),
+                  tooltip: l10n.selectLanguage,
+                  onPressed: () => showLanguagePickerDialog(context),
+                ),
+              ],
             ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -130,7 +144,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   children: [
                     SearchBar(
-                      hintText: 'Search name, phone, or items',
+                      hintText: l10n.searchHint,
                       leading: const Icon(Icons.search),
                       elevation: const WidgetStatePropertyAll(0),
                       onChanged: (value) => setState(() => _query = value),
@@ -143,28 +157,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: Row(
                           children: [
                             ChoiceChip(
-                              label: const Text('All'),
+                              label: Text(l10n.all),
                               selected: _filter == _DebtFilter.all,
                               onSelected: (_) =>
                                   setState(() => _filter = _DebtFilter.all),
                             ),
                             const SizedBox(width: 8),
                             ChoiceChip(
-                              label: const Text('Active'),
+                              label: Text(l10n.active),
                               selected: _filter == _DebtFilter.active,
                               onSelected: (_) =>
                                   setState(() => _filter = _DebtFilter.active),
                             ),
                             const SizedBox(width: 8),
                             ChoiceChip(
-                              label: const Text('Overdue'),
+                              label: Text(l10n.overdue),
                               selected: _filter == _DebtFilter.overdue,
                               onSelected: (_) =>
                                   setState(() => _filter = _DebtFilter.overdue),
                             ),
                             const SizedBox(width: 8),
                             ChoiceChip(
-                              label: const Text('Settled (የተከፈለ)'),
+                              label: Text(l10n.paid),
                               selected: _filter == _DebtFilter.settled,
                               onSelected: (_) =>
                                   setState(() => _filter = _DebtFilter.settled),
@@ -188,7 +202,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: _CenteredMessage(
                   icon: Icons.error_outline,
                   message: _error!,
-                  actionLabel: 'Retry',
+                  actionLabel: l10n.retry,
                   onAction: _load,
                 ),
               )
@@ -198,10 +212,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: _CenteredMessage(
                   icon: Icons.storefront_outlined,
                   message: _entries.isEmpty
-                      ? 'No Dube records yet.\nTap + to record the first credit sale.'
+                      ? l10n.noRecordsYet
                       : _filter == _DebtFilter.settled
-                          ? 'No settled debts yet.'
-                          : 'No matching debtors.',
+                          ? l10n.noPaidDebts
+                          : l10n.noMatchingDebtors,
                 ),
               )
             else
@@ -225,7 +239,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openAddDebt,
         icon: const Icon(Icons.add),
-        label: const Text('New Dube'),
+        label: Text(l10n.recordDebt),
       ),
       bottomNavigationBar: const SafeArea(
         child: AdBannerBar(),
@@ -241,24 +255,26 @@ class _SummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final tight = constraints.maxWidth < 520;
         final cards = [
           _SummaryCard(
-            label: 'Total Active Dube (ETB)',
+            label: l10n.totalDue,
             value: formatEtbCompact(stats.totalActiveDube),
             icon: Icons.account_balance_wallet_outlined,
             tone: _SummaryTone.primary,
           ),
           _SummaryCard(
-            label: 'Overdue Accounts',
+            label: l10n.overdueAccounts,
             value: '${stats.overdueAccounts}',
             icon: Icons.warning_amber_rounded,
             tone: _SummaryTone.danger,
           ),
           _SummaryCard(
-            label: 'Total Borrowers',
+            label: l10n.customers,
             value: '${stats.totalBorrowers}',
             icon: Icons.groups_outlined,
             tone: _SummaryTone.neutral,
@@ -371,6 +387,7 @@ class _DebtorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
     final overdue = entry.debt.status == DebtStatus.overdue;
     final settled = entry.debt.isSettled;
 
@@ -442,7 +459,7 @@ class _DebtorCard extends StatelessWidget {
                       ),
                       if (settled)
                         Text(
-                          'Total: ${formatEtbCompact(entry.debt.totalAmount)}',
+                          '${l10n.totalPrefix} ${formatEtbCompact(entry.debt.totalAmount)}',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: scheme.onSurfaceVariant,
                             fontSize: 11,
@@ -478,8 +495,8 @@ class _DebtorCard extends StatelessWidget {
                   const SizedBox(width: 6),
                   Text(
                     settled
-                        ? 'Settled'
-                        : 'Due ${formatDateIso(entry.debt.dueDate)}',
+                        ? l10n.paid
+                        : '${l10n.duePrefix} ${formatDateIso(entry.debt.dueDate)}',
                     style: theme.textTheme.labelLarge?.copyWith(
                       color: settled
                           ? const Color(0xFF2E7D32)
@@ -504,7 +521,7 @@ class _DebtorCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'Settled (የተከፈለ)',
+                        l10n.paid,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: const Color(0xFF1B5E20),
                           fontWeight: FontWeight.w800,
@@ -523,11 +540,30 @@ class _DebtorCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'OVERDUE',
+                        l10n.overdue.toUpperCase(),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: scheme.onErrorContainer,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.4,
+                        ),
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        l10n.unpaid,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.2,
                         ),
                       ),
                     ),

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:dube/database/db_helper.dart';
+import 'package:dube/l10n/app_localizations.dart';
 import 'package:dube/models/customer.dart';
 import 'package:dube/models/customer_reliability.dart';
 import 'package:dube/models/debt_history.dart';
@@ -83,10 +84,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   }) async {
     final list = openOnly ? _openDebts : _debts;
     if (list.isEmpty) {
+      final l10n = AppLocalizations.of(context);
       _showMessage(
-        openOnly
-            ? 'This customer has no open Dube.'
-            : 'No Dube recorded for this customer.',
+        openOnly ? l10n.noOpenDube : l10n.noDubeRecorded,
       );
       return null;
     }
@@ -132,8 +132,13 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                     ),
                     subtitle: Text(
                       debt.isSettled
-                          ? 'Settled · ${formatEtb(debt.totalAmount)}'
-                          : '${formatEtb(debt.remainingBalance)} · due ${formatDateIso(debt.dueDate)}',
+                          ? AppLocalizations.of(context).settledAmount(
+                              formatEtb(debt.totalAmount),
+                            )
+                          : AppLocalizations.of(context).remainingDue(
+                              formatEtb(debt.remainingBalance),
+                              formatDateIso(debt.dueDate),
+                            ),
                     ),
                     onTap: () => Navigator.pop(context, debt),
                   ),
@@ -147,8 +152,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   }
 
   Future<void> _recordPayment([DebtRecord? targetDebt]) async {
-    final debt =
-        targetDebt ?? await _pickDebt(title: 'Which Dube is being paid?');
+    final debt = targetDebt ??
+        await _pickDebt(title: AppLocalizations.of(context).whichDubePaid);
     if (debt == null || !mounted) return;
 
     final updated = await showDialog<bool>(
@@ -158,7 +163,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     );
 
     if (updated == true && mounted) {
-      _showMessage('Payment updated successfully.');
+      _showMessage(AppLocalizations.of(context).paymentUpdated);
       await _load();
     }
   }
@@ -166,7 +171,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   Future<void> _editDebt([DebtRecord? targetDebt]) async {
     final debt = targetDebt ??
         await _pickDebt(
-          title: 'Which Dube do you want to edit?',
+          title: AppLocalizations.of(context).whichDubeEdit,
           openOnly: false,
         );
     if (debt == null || !mounted) return;
@@ -178,14 +183,14 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     );
 
     if (updated == true && mounted) {
-      _showMessage('Dube updated successfully.');
+      _showMessage(AppLocalizations.of(context).dubeUpdated);
       await _load();
     }
   }
 
   Future<void> _extendDueDate([DebtRecord? targetDebt]) async {
-    final debt =
-        targetDebt ?? await _pickDebt(title: 'Which Dube should be extended?');
+    final l10n = AppLocalizations.of(context);
+    final debt = targetDebt ?? await _pickDebt(title: l10n.whichDubeExtend);
     if (debt == null || !mounted) return;
 
     final initial = debt.dueDateTime.isAfter(DateTime.now())
@@ -196,7 +201,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       initialDate: initial,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
-      helpText: 'New due date',
+      helpText: l10n.newDueDateHelp,
     );
     if (picked == null || !mounted) return;
 
@@ -206,19 +211,20 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         newDueDate: picked,
       );
       if (!mounted) return;
-      _showMessage('Due date extended to ${formatDate(picked)}.');
+      _showMessage(l10n.dueDateExtended(formatDate(picked)));
       await _load();
     } catch (error) {
       if (!mounted) return;
-      _showMessage('Could not extend due date: $error');
+      _showMessage(l10n.couldNotExtend('$error'));
     }
   }
 
   Future<void> _sendSmsReminder() async {
     final customer = _customer;
     if (customer == null) return;
+    final l10n = AppLocalizations.of(context);
     if (_outstanding <= 0.005) {
-      _showMessage('This customer has no outstanding Dube.');
+      _showMessage(l10n.noOutstanding);
       return;
     }
 
@@ -228,10 +234,12 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         .map((d) => d.dueDateTime)
         .reduce((a, b) => a.isBefore(b) ? a : b);
 
-    final body =
-        'Dear ${customer.name}, reminder from shop regarding your Dube '
-        'balance of ${formatEtb(_outstanding)} for $items, '
-        'due on ${formatDate(earliest)}.';
+    final body = l10n.smsBody(
+      name: customer.name,
+      amount: formatEtb(_outstanding),
+      items: items,
+      date: formatDate(earliest),
+    );
 
     final uri = Uri(
       scheme: 'sms',
@@ -242,11 +250,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     try {
       final launched = await launchUrl(uri);
       if (!launched && mounted) {
-        _showMessage('Could not open the SMS app.');
+        _showMessage(l10n.couldNotOpenSms);
       }
     } catch (error) {
       if (!mounted) return;
-      _showMessage('Could not open SMS: $error');
+      _showMessage(l10n.couldNotOpenSmsError('$error'));
     }
   }
 
@@ -278,8 +286,13 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                       const SizedBox(height: 2),
                       Text(
                         debt.isSettled
-                            ? 'Settled · Total: ${formatEtb(debt.totalAmount)}'
-                            : 'Remaining: ${formatEtb(debt.remainingBalance)} of ${formatEtb(debt.totalAmount)}',
+                            ? AppLocalizations.of(context).settledAmount(
+                                formatEtb(debt.totalAmount),
+                              )
+                            : AppLocalizations.of(context).remainingOf(
+                                formatEtb(debt.remainingBalance),
+                                formatEtb(debt.totalAmount),
+                              ),
                         style: TextStyle(
                           color: debt.isSettled
                               ? const Color(0xFF2E7D32)
@@ -295,9 +308,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   ListTile(
                     leading:
                         Icon(Icons.payments_outlined, color: scheme.primary),
-                    title: const Text('Record Payment / Mark as Paid'),
+                    title: Text(AppLocalizations.of(context).recordPaymentMarkPaid),
                     subtitle:
-                        const Text('Settle in full or make partial payment'),
+                        Text(AppLocalizations.of(context).settleFullOrPartial),
                     onTap: () {
                       Navigator.pop(context);
                       _recordPayment(debt);
@@ -305,9 +318,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   ),
                   ListTile(
                     leading: const Icon(Icons.event_repeat_outlined),
-                    title: const Text('Extend Due Date'),
-                    subtitle:
-                        Text('Current due: ${formatDateIso(debt.dueDate)}'),
+                    title: Text(AppLocalizations.of(context).extendDueDate),
+                    subtitle: Text(
+                      AppLocalizations.of(context)
+                          .currentDue(formatDateIso(debt.dueDate)),
+                    ),
                     onTap: () {
                       Navigator.pop(context);
                       _extendDueDate(debt);
@@ -316,8 +331,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                 ],
                 ListTile(
                   leading: const Icon(Icons.edit_note_outlined),
-                  title: const Text('Edit / Adjust Dube'),
-                  subtitle: const Text('Modify items, total amount, or notes'),
+                  title: Text(AppLocalizations.of(context).editAdjustDube),
+                  subtitle: Text(AppLocalizations.of(context).modifyItems),
                   onTap: () {
                     Navigator.pop(context);
                     _editDebt(debt);
@@ -341,10 +356,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final customer = _customer;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(customer?.name ?? 'Customer'),
+        title: Text(customer?.name ?? l10n.customer),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -372,15 +388,15 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        'Open & past Dube',
+                        l10n.openAndPastDube,
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 8),
                       if (_debts.isEmpty)
-                        const _EmptyHint(
+                        _EmptyHint(
                           icon: Icons.inbox_outlined,
-                          message: 'No Dube recorded for this customer yet.',
+                          message: l10n.noDubeForCustomerYet,
                         )
                       else
                         for (final debt in _debts)
@@ -391,15 +407,15 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                           ),
                       const SizedBox(height: 24),
                       Text(
-                        'Repayment & deadline timeline',
+                        l10n.repaymentTimeline,
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 8),
                       if (_history.isEmpty)
-                        const _EmptyHint(
+                        _EmptyHint(
                           icon: Icons.timeline,
-                          message: 'No history yet.',
+                          message: l10n.noHistory,
                         )
                       else
                         _HistoryTimeline(entries: _history),
@@ -419,6 +435,7 @@ class _ReliabilityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
     final hasOverdue = stats.overdueDebtsCount > 0;
     final isReliable = stats.settledDebtsCount > 0 && !hasOverdue;
 
@@ -450,7 +467,7 @@ class _ReliabilityCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Repayment Track Record',
+                    l10n.repaymentTrackRecord,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -473,7 +490,7 @@ class _ReliabilityCard extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    stats.trustLabel,
+                    l10n.trustLabelFor(stats),
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: badgeFg,
                       fontWeight: FontWeight.w800,
@@ -487,12 +504,12 @@ class _ReliabilityCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _MetricItem(
-                    label: 'Settled / Active',
+                    label: l10n.settledActive,
                     value:
                         '${stats.settledDebtsCount} / ${stats.activeDebtsCount + stats.overdueDebtsCount}',
                     subtext: stats.overdueDebtsCount > 0
-                        ? '⚠️ ${stats.overdueDebtsCount} overdue'
-                        : '${stats.totalDebtsCount} total',
+                        ? l10n.overdueCountLabel(stats.overdueDebtsCount)
+                        : l10n.totalCountLabel(stats.totalDebtsCount),
                     subtextColor: hasOverdue ? scheme.error : null,
                   ),
                 ),
@@ -505,13 +522,16 @@ class _ReliabilityCard extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(left: 12),
                     child: _MetricItem(
-                      label: 'On-Time Settlement',
+                      label: l10n.onTimeSettlement,
                       value: stats.settledDebtsCount > 0
                           ? '${(stats.onTimeRate * 100).toStringAsFixed(0)}%'
-                          : 'N/A',
+                          : l10n.notAvailable,
                       subtext: stats.settledDebtsCount > 0
-                          ? '${stats.onTimeSettledCount}/${stats.settledDebtsCount} on time'
-                          : 'No history',
+                          ? l10n.onTimeFraction(
+                              stats.onTimeSettledCount,
+                              stats.settledDebtsCount,
+                            )
+                          : l10n.noHistoryShort,
                       subtextColor: isReliable ? const Color(0xFF2E7D32) : null,
                     ),
                   ),
@@ -544,7 +564,7 @@ class _ReliabilityCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Total Borrowed',
+                        l10n.totalBorrowed,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: scheme.onSurfaceVariant,
                         ),
@@ -564,7 +584,7 @@ class _ReliabilityCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Total Repaid',
+                        l10n.totalRepaid,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: scheme.onSurfaceVariant,
                         ),

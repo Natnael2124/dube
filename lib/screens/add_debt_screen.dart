@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:dube/database/db_helper.dart';
+import 'package:dube/l10n/app_localizations.dart';
 import 'package:dube/models/customer.dart';
 import 'package:dube/models/customer_reliability.dart';
 import 'package:dube/utils/formatters.dart';
@@ -68,12 +69,13 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
   }
 
   Future<void> _pickDueDate() async {
+    final l10n = AppLocalizations.of(context);
     final picked = await showDatePicker(
       context: context,
       initialDate: _dueDate,
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
-      helpText: 'Select due date',
+      helpText: l10n.selectDueDate,
     );
     if (picked != null) {
       setState(() => _dueDate = picked);
@@ -104,7 +106,9 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
       if (!mounted) return;
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save Dube: $error')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).couldNotSave('$error')),
+        ),
       );
     }
   }
@@ -113,11 +117,12 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
     final hasOverdue = (_reliabilityStats?.overdueDebtsCount ?? 0) > 0;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Record New Dube'),
+        title: Text(l10n.recordDebt),
       ),
       body: SafeArea(
         child: Form(
@@ -126,7 +131,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
             children: [
               Text(
-                'Customer',
+                l10n.customer,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -136,14 +141,14 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                 controller: _nameController,
                 textCapitalization: TextCapitalization.words,
                 textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  hintText: 'Customer full name',
-                  prefixIcon: Icon(Icons.person_outline),
+                decoration: InputDecoration(
+                  labelText: l10n.name,
+                  hintText: l10n.nameHint,
+                  prefixIcon: const Icon(Icons.person_outline),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Enter the customer name';
+                    return l10n.nameRequired;
                   }
                   return null;
                 },
@@ -156,18 +161,18 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9+\s-]')),
                 ],
-                decoration: const InputDecoration(
-                  labelText: 'Phone',
-                  hintText: '09xxxxxxxx',
-                  prefixIcon: Icon(Icons.phone_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.phone,
+                  hintText: l10n.phoneHint,
+                  prefixIcon: const Icon(Icons.phone_outlined),
                 ),
                 onChanged: _lookupCustomer,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Enter a phone number';
+                    return l10n.phoneRequired;
                   }
                   if (value.trim().length < 7) {
-                    return 'Phone number looks too short';
+                    return l10n.phoneTooShort;
                   }
                   return null;
                 },
@@ -207,7 +212,9 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Existing customer · ${_existingCustomer!.name}',
+                              l10n.existingCustomerNamed(
+                                _existingCustomer!.name,
+                              ),
                               style: theme.textTheme.labelLarge?.copyWith(
                                 fontWeight: FontWeight.w700,
                                 color: hasOverdue
@@ -221,7 +228,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                       if (_reliabilityStats != null) ...[
                         const SizedBox(height: 4),
                         Text(
-                          _reliabilityStats!.quickSummary,
+                          l10n.quickSummaryFor(_reliabilityStats!),
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: hasOverdue
@@ -236,7 +243,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
               ],
               const SizedBox(height: 24),
               Text(
-                'Dube details',
+                l10n.dubeDetails,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -248,15 +255,15 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                 maxLines: 4,
                 textCapitalization: TextCapitalization.sentences,
                 textInputAction: TextInputAction.newline,
-                decoration: const InputDecoration(
-                  labelText: 'Item details',
-                  hintText: 'e.g. Sugar 2kg, Cooking oil 1L, Bread',
+                decoration: InputDecoration(
+                  labelText: l10n.itemDetails,
+                  hintText: l10n.itemHint,
                   alignLabelWithHint: true,
-                  prefixIcon: Icon(Icons.shopping_basket_outlined),
+                  prefixIcon: const Icon(Icons.shopping_basket_outlined),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Describe the items taken on credit';
+                    return l10n.itemsRequired;
                   }
                   return null;
                 },
@@ -271,15 +278,15 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                 ],
-                decoration: const InputDecoration(
-                  labelText: 'Amount (ETB)',
-                  hintText: '0.00',
-                  prefixIcon: Icon(Icons.payments_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.amountEtb,
+                  hintText: l10n.amountHint,
+                  prefixIcon: const Icon(Icons.payments_outlined),
                 ),
                 validator: (value) {
                   final parsed = double.tryParse((value ?? '').trim());
-                  if (parsed == null) return 'Enter a valid amount';
-                  if (parsed <= 0) return 'Amount must be greater than zero';
+                  if (parsed == null) return l10n.amountInvalid;
+                  if (parsed <= 0) return l10n.amountMustBePositive;
                   return null;
                 },
               ),
@@ -291,7 +298,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                   side: BorderSide(color: scheme.outlineVariant),
                 ),
                 leading: Icon(Icons.event_outlined, color: scheme.primary),
-                title: const Text('Due date'),
+                title: Text(l10n.dueDate),
                 subtitle: Text(formatDate(_dueDate)),
                 trailing: const Icon(Icons.chevron_right),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -302,10 +309,10 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                 minLines: 1,
                 maxLines: 3,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  labelText: 'Notes (optional)',
-                  hintText: 'Shop notes about this customer',
-                  prefixIcon: Icon(Icons.notes_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.notesOptional,
+                  hintText: l10n.notesHint,
+                  prefixIcon: const Icon(Icons.notes_outlined),
                 ),
               ),
               const SizedBox(height: 28),
@@ -318,7 +325,7 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.save_outlined),
-                label: Text(_saving ? 'Saving…' : 'Save Dube'),
+                label: Text(_saving ? l10n.saving : l10n.save),
               ),
             ],
           ),
