@@ -134,32 +134,21 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                           children: [
                             Text(
                               lang['flag'] ?? '🌐',
-                              style: const TextStyle(fontSize: 28),
+                              style: const TextStyle(fontSize: 26),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    lang['nativeName']!,
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: isSelected
-                                          ? FontWeight.w800
-                                          : FontWeight.w600,
-                                      color: isSelected
-                                          ? scheme.primary
-                                          : scheme.onSurface,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    lang['subtitle']!,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: scheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
+                              child: Text(
+                                lang['nativeName']!,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontSize: 17,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w800
+                                      : FontWeight.w600,
+                                  color: isSelected
+                                      ? scheme.primary
+                                      : scheme.onSurface,
+                                ),
                               ),
                             ),
                             if (isSelected)

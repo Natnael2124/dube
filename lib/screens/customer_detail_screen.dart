@@ -742,10 +742,11 @@ class _RecordPaymentDialogState extends State<_RecordPaymentDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
     final remaining = widget.debt.remainingBalance;
 
     return AlertDialog(
-      title: const Text('Record Payment'),
+      title: Text(l10n.recordPayment),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -823,7 +824,7 @@ class _RecordPaymentDialogState extends State<_RecordPaymentDialog> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Marks this Dube as settled in full with remaining balance ETB 0.00.',
+                          'Marks this Dube as settled in full with remaining balance ${formatEtb(0)}.',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: const Color(0xFF1B5E20),
                           ),
@@ -842,10 +843,10 @@ class _RecordPaymentDialogState extends State<_RecordPaymentDialog> {
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                   ],
-                  decoration: const InputDecoration(
-                    labelText: 'Payment Amount (ETB)',
+                  decoration: InputDecoration(
+                    labelText: l10n.paymentAmount,
                     hintText: '0.00',
-                    prefixIcon: Icon(Icons.payments_outlined),
+                    prefixIcon: const Icon(Icons.payments_outlined),
                   ),
                   validator: (value) {
                     final parsed = double.tryParse((value ?? '').trim());
@@ -978,9 +979,10 @@ class _EditDebtDialogState extends State<_EditDebtDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return AlertDialog(
-      title: const Text('Edit / Adjust Dube'),
+      title: Text(l10n.editDebt),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -1031,9 +1033,9 @@ class _EditDebtDialogState extends State<_EditDebtDialog> {
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                 ],
-                decoration: const InputDecoration(
-                  labelText: 'Total Amount (ETB)',
-                  prefixIcon: Icon(Icons.payments_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.amountEtb,
+                  prefixIcon: const Icon(Icons.payments_outlined),
                 ),
                 validator: (value) {
                   final parsed = double.tryParse((value ?? '').trim());

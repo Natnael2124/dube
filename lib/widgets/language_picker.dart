@@ -123,26 +123,15 @@ class LanguageOptionTile extends StatelessWidget {
               ),
               const SizedBox(width: 14),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      option.nativeName,
-                      style: (prominent
-                              ? theme.textTheme.titleLarge
-                              : theme.textTheme.titleMedium)
-                          ?.copyWith(fontWeight: FontWeight.w800),
-                    ),
-                    if (option.englishName != option.nativeName) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        option.englishName,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ],
+                child: Text(
+                  option.nativeName,
+                  style: (prominent
+                          ? theme.textTheme.titleLarge
+                          : theme.textTheme.titleMedium)
+                      ?.copyWith(
+                    fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                    color: selected ? scheme.primary : scheme.onSurface,
+                  ),
                 ),
               ),
               if (selected)

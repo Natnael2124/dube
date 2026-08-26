@@ -730,6 +730,140 @@ class AppLocalizations {
         om: 'Bilbili',
       );
 
+  // --- CURRENCY SETTINGS ---
+  String get currency => _select(
+        en: 'Currency',
+        am: 'የገንዘብ ምልክት',
+        om: 'Mallattoo Qarshii',
+      );
+
+  String get selectCurrency => _select(
+        en: 'Select Currency',
+        am: 'የገንዘብ ምልክት ይምረጡ',
+        om: 'Mallattoo Qarshii Filadhaa',
+      );
+
+  String get customCurrency => _select(
+        en: 'Custom Currency...',
+        am: 'ብጁ የገንዘብ ምልክት...',
+        om: 'Mallattoo Qarshii Addaa...',
+      );
+
+  String get enterCurrencyHint => _select(
+        en: 'Enter currency symbol or code (e.g. USD, KSh, FCFA)',
+        am: 'የገንዘብ ምልክት ወይም ምህፃረ ቃል ያስገቡ (ምሳሌ፡ USD, KSh, FCFA)',
+        om: 'Mallattoo ykn koodii qarshii galchaa (fkn. USD, KSh, FCFA)',
+      );
+
+  // --- SHOPKEEPER DAILY NOTEPAD / SCRATCHPAD ---
+  String get dailyNotes => _select(
+        en: 'Daily Notes',
+        am: 'የዕለት ማስታወሻ',
+        om: 'Yaadannoo Guyyaa',
+      );
+
+  String get scratchpad => _select(
+        en: 'Shop Scratchpad',
+        am: 'ፈጣን ማስታወሻ',
+        om: 'Yaadannoo Suuqii',
+      );
+
+  String get addNote => _select(
+        en: 'Add Note',
+        am: 'ማስታወሻ ጻፍ',
+        om: 'Yaadannoo Galmeessi',
+      );
+
+  String get editNote => _select(
+        en: 'Edit Note',
+        am: 'ማስታወሻ አርም',
+        om: 'Yaadannoo Gulaali',
+      );
+
+  String get noteTitle => _select(
+        en: 'Title (Optional)',
+        am: 'አርዕስት (አማራጭ)',
+        om: 'Mata Duree (Filannoo)',
+      );
+
+  String get noteContent => _select(
+        en: 'Note details, restock items, or cash tally...',
+        am: 'የማስታወሻው ዝርዝር፣ የእቃ ማዘዣ ወይም የሂሳብ ማጠቃለያ...',
+        om: 'Qabiyyee yaadannoo, meeshaalee barbaadaman ykn shallaggii...',
+      );
+
+  String get isTodoChecklist => _select(
+        en: 'To-Do / Restock Checklist',
+        am: 'የተግባር / የእቃ ዝርዝር',
+        om: 'Tarree Hojii / Meeshaa',
+      );
+
+  String get pinToTop => _select(
+        en: 'Pin to Top',
+        am: 'ከላይ ሰካ',
+        om: 'Gubbaatti Qabsiisi',
+      );
+
+  String get pinned => _select(
+        en: 'Pinned',
+        am: 'የተሰካ',
+        om: 'Qabsiifame',
+      );
+
+  String get unpin => _select(
+        en: 'Unpin',
+        am: 'አውርድ',
+        om: 'Qabsiisa Kaasi',
+      );
+
+  String get noNotesYet => _select(
+        en: 'No notes yet.\nTap + to jot down supplier deliveries, restock lists, or daily tallies.',
+        am: 'ምንም ማስታወሻ የለም።\nየአቅራቢ ዕቃዎችን፣ የሚያልቁ ሸቀጦችን ወይም የዕለት ሂሳብ ለመጻፍ + ይጫኑ።',
+        om: 'Yaadannoon hin jiru.\nAjaja dhiyeessitootaa, meeshaalee dhumanii fi shallaggii guyyaa galmeessuuf + tuqaa.',
+      );
+
+  String get noteDeleted => _select(
+        en: 'Note deleted',
+        am: 'ማስታወሻው ተሰርዟል',
+        om: 'Yaadannoon haqameera',
+      );
+
+  String get allNotes => _select(
+        en: 'All Notes',
+        am: 'ሁሉም',
+        om: 'Hundaa',
+      );
+
+  String get pinnedNotes => _select(
+        en: 'Pinned',
+        am: 'የተሰኩ',
+        om: 'Qabsiifaman',
+      );
+
+  String get todosOnly => _select(
+        en: 'Checklists',
+        am: 'የተግባር ዝርዝሮች',
+        om: 'Tarree Hojii',
+      );
+
+  String get markDone => _select(
+        en: 'Completed',
+        am: 'የተጠናቀቀ',
+        om: 'Xumurame',
+      );
+
+  String get ledgerTab => _select(
+        en: 'Credit Ledger',
+        am: 'የብድር መዝገብ',
+        om: 'Galmee Liqii',
+      );
+
+  String get notesTab => _select(
+        en: 'Daily Notes',
+        am: 'የሱቅ ማስታወሻ',
+        om: 'Yaadannoo Suuqii',
+      );
+
   // --- HELPER METHOD ---
   String _select({
     required String en,

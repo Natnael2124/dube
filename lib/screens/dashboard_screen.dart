@@ -6,8 +6,10 @@ import 'package:dube/models/debt_record.dart';
 import 'package:dube/models/debtor_entry.dart';
 import 'package:dube/screens/add_debt_screen.dart';
 import 'package:dube/screens/customer_detail_screen.dart';
+import 'package:dube/screens/shop_notes_screen.dart';
 import 'package:dube/utils/formatters.dart';
 import 'package:dube/widgets/ad_banner_bar.dart';
+import 'package:dube/widgets/currency_picker.dart';
 import 'package:dube/widgets/language_picker.dart';
 
 enum _DebtFilter { all, active, overdue, settled }
@@ -125,6 +127,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.edit_note_rounded),
+                  tooltip: l10n.dailyNotes,
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ShopNotesScreen(),
+                      ),
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.payments_outlined),
+                  tooltip: l10n.currency,
+                  onPressed: () => showCurrencyPickerDialog(context),
+                ),
                 IconButton(
                   icon: const Icon(Icons.language),
                   tooltip: l10n.selectLanguage,

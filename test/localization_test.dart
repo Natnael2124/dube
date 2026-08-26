@@ -31,6 +31,10 @@ void main() {
       expect(l10n.paid, 'Settled');
       expect(l10n.unpaid, 'Unpaid');
       expect(l10n.language, 'Language');
+      expect(l10n.currency, 'Currency');
+      expect(l10n.dailyNotes, 'Daily Notes');
+      expect(l10n.addNote, 'Add Note');
+      expect(l10n.pinToTop, 'Pin to Top');
     });
 
     test('Amharic (አማርኛ) translations match core requirements', () {
@@ -51,6 +55,10 @@ void main() {
       expect(l10n.paid, 'የተከፈለ');
       expect(l10n.unpaid, 'ያልተከፈለ');
       expect(l10n.language, 'ቋንቋ');
+      expect(l10n.currency, 'የገንዘብ ምልክት');
+      expect(l10n.dailyNotes, 'የዕለት ማስታወሻ');
+      expect(l10n.addNote, 'ማስታወሻ ጻፍ');
+      expect(l10n.pinToTop, 'ከላይ ሰካ');
     });
 
     test('Afaan Oromoo translations match core requirements', () {
@@ -71,6 +79,10 @@ void main() {
       expect(l10n.paid, 'Kaffalame');
       expect(l10n.unpaid, 'Hin Kaffalamne');
       expect(l10n.language, 'Afaan');
+      expect(l10n.currency, 'Mallattoo Qarshii');
+      expect(l10n.dailyNotes, 'Yaadannoo Guyyaa');
+      expect(l10n.addNote, 'Yaadannoo Galmeessi');
+      expect(l10n.pinToTop, 'Gubbaatti Qabsiisi');
     });
 
     test('Trust labels and summaries format across all languages', () {

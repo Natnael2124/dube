@@ -1,3 +1,4 @@
+import 'package:dube/l10n/currency_controller.dart';
 import 'package:intl/intl.dart';
 
 final NumberFormat _etb = NumberFormat.currency(
@@ -9,8 +10,13 @@ final NumberFormat _etb = NumberFormat.currency(
 final DateFormat _displayDate = DateFormat('d MMM yyyy');
 final DateFormat _displayDateTime = DateFormat('d MMM yyyy · HH:mm');
 
+String formatCurrency(double amount, [String? symbol]) {
+  final sym = symbol ?? CurrencyController.instance.currentSymbol;
+  return '$sym ${_etb.format(amount).trim()}';
+}
+
 String formatEtb(double amount) {
-  return 'ETB ${_etb.format(amount).trim()}';
+  return formatCurrency(amount);
 }
 
 String formatEtbCompact(double amount) {

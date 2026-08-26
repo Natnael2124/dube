@@ -6,6 +6,7 @@ import 'package:dube/models/customer_reliability.dart';
 import 'package:dube/models/debt_history.dart';
 import 'package:dube/models/debt_record.dart';
 import 'package:dube/models/debtor_entry.dart';
+import 'package:dube/models/shop_note.dart';
 import 'package:dube/utils/formatters.dart';
 
 class DbHelper {
@@ -14,11 +15,12 @@ class DbHelper {
   static final DbHelper instance = DbHelper._();
 
   static const _dbName = 'dube.db';
-  static const _dbVersion = 1;
+  static const _dbVersion = 2;
 
   static const tableCustomers = 'Customers';
   static const tableDebts = 'DebtRecords';
   static const tableHistory = 'DebtHistory';
+  static const tableShopNotes = 'shop_notes';
 
   Database? _database;
 
@@ -39,6 +41,7 @@ class DbHelper {
         await db.execute('PRAGMA foreign_keys = ON');
       },
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -92,6 +95,32 @@ class DbHelper {
     );
     await db.execute(
       'CREATE INDEX idx_history_debt ON $tableHistory (debt_id)',
+    );
+
+    await _createNotesTable(db);
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await _createNotesTable(db);
+    }
+  }
+
+  Future<void> _createNotesTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableShopNotes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        is_pinned INTEGER NOT NULL DEFAULT 0,
+        is_todo INTEGER NOT NULL DEFAULT 0,
+        is_done INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_notes_pinned ON $tableShopNotes (is_pinned, updated_at)',
     );
   }
 
@@ -734,4 +763,65 @@ class DbHelper {
       );
     });
   }
+
+  // ---------------------------------------------------------------------------
+  // Shopkeeper Daily Notepad / Checklist Operations
+  // ---------------------------------------------------------------------------
+
+  Future<int> insertNote(ShopNote note) async {
+    final db = await database;
+    return db.insert(tableShopNotes, note.toMap());
+  }
+
+  Future<int> updateNote(ShopNote note) async {
+    final db = await database;
+    if (note.id == null) return 0;
+    return db.update(
+      tableShopNotes,
+      note.toMap(),
+      where: 'id = ?',
+      whereArgs: [note.id],
+    );
+  }
+
+  Future<int> deleteNote(int id) async {
+    final db = await database;
+    return db.delete(
+      tableShopNotes,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<int> toggleNotePinned(int id, bool isPinned) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+    return db.update(
+      tableShopNotes,
+      {'is_pinned': isPinned ? 1 : 0, 'updated_at': now},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<int> toggleNoteDone(int id, bool isDone) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+    return db.update(
+      tableShopNotes,
+      {'is_done': isDone ? 1 : 0, 'updated_at': now},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<List<ShopNote>> getAllNotes() async {
+    final db = await database;
+    final rows = await db.query(
+      tableShopNotes,
+      orderBy: 'is_pinned DESC, updated_at DESC',
+    );
+    return rows.map((r) => ShopNote.fromMap(r)).toList();
+  }
 }
+
